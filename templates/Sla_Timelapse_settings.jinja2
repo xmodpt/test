@@ -1,0 +1,21 @@
+<h3>{{ _("SLA Timelapse") }}</h3>
+<form class="form-horizontal">
+    <div class="control-group">
+        <label class="control-label">{{ _('Number of triggers to ignore') }}
+            <span class="help-block">{{ _('Number of triggers to ignore before starting to save files.') }}</span>
+        </label>
+        <div class="controls">
+            <input type="text" class="input-block-level" maxlength="10"
+                   data-bind="value: settings.plugins.slatimelapse.triggersToIgnore">
+        </div>
+    </div>
+    <div class="control-group">
+        <label class="control-label">{{ _('Number of layers to ignore') }}
+            <span class="help-block">{{ _('Number of layers that SLA Timelapse will ignore so you may start capturing when the build plate is at level with the VAT.') }}</span>
+        </label>
+        <div class="controls">
+            <input type="text" class="input-block-level" maxlength="10"
+                   data-bind="value: settings.plugins.slatimelapse.layersToIgnore">
+        </div>
+    </div>
+</form>
