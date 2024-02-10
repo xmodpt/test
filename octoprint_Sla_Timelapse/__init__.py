@@ -4,7 +4,7 @@ import octoprint.plugin
 import RPi.GPIO as GPIO
 import time
 
-class SnapshotTriggerPlugin(octoprint.plugin.StartupPlugin):
+class SnapshotTriggerPlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.SettingsPlugin):
     def on_after_startup(self):
         # Initialize GPIO and register the callback
         self._setup_gpio()
@@ -32,7 +32,7 @@ class SnapshotTriggerPlugin(octoprint.plugin.StartupPlugin):
             self._logger.info("Snapshot taken!")
 
     def get_settings_defaults(self):
-        return dict(gpio_pin=17, snapshot_delay=5)  # Default GPIO pin and snapshot delay (you can change these)
+        return dict(gpio_pin=21, snapshot_delay=5)  # Default GPIO pin and snapshot delay (you can change these)
 
     def get_template_configs(self):
         return [
