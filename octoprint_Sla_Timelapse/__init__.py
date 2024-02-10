@@ -36,7 +36,7 @@ class SnapshotTriggerPlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.Set
 
     def get_template_configs(self):
         return [
-            dict(type="settings", custom_bindings=False)
+            dict(type="settings", custom_bindings=False, template="sla_timelapse_settings.jinja2")
         ]
 
 __plugin_name__ = "Sla_timelapse Plugin"

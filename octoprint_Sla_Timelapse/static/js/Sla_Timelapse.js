@@ -24,6 +24,6 @@ $(function() {
         // ViewModels your plugin depends on, e.g. loginStateViewModel, settingsViewModel, ...
         dependencies: [ /* "loginStateViewModel", "settingsViewModel" */ ],
         // Elements to bind to, e.g. #settings_plugin_Sla_Timelapse, #tab_plugin_Sla_Timelapse, ...
-        elements: [ /* ... */ ]
+        elements: ["#settings_plugin_Sla_Timelapse"]
     });
 });
