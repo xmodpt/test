@@ -19,7 +19,8 @@ class SnapshotTriggerPlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.Set
     def handle_ldr_state(self, channel):
         if GPIO.input(channel):  # LDR Deactivated
             self._logger.info("LDR Deactivated... waiting for photo in {} seconds".format(self._settings.get_int(["snapshot_delay"])))
-            self.snapshot_timer = time.time()
+            t = threading.Timer(self._settings.get_int(["snapshot_delay"]), self._printer.commands, ["@OCTOLAPSE TAKE-SNAPSHOT"])
+            t.start()
         else:  # LDR Activated
             self._logger.info("LDR Activated")
 
