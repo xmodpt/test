@@ -2,6 +2,8 @@
 
 import octoprint.plugin
 import RPi.GPIO as GPIO
+import requests
+import os
 import time
 
 class SnapshotTriggerPlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.SettingsPlugin):
@@ -19,18 +21,26 @@ class SnapshotTriggerPlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.Set
     def handle_ldr_state(self, channel):
         if GPIO.input(channel):  # LDR Deactivated
             self._logger.info("LDR Deactivated... waiting for photo in {} seconds".format(self._settings.get_int(["snapshot_delay"])))
-            t = threading.Timer(self._settings.get_int(["snapshot_delay"]), self._printer.commands, ["@OCTOLAPSE TAKE-SNAPSHOT"])
+            t = threading.Timer(self._settings.get_int(["snapshot_delay"]), self.take_snapshot)
             t.start()
         else:  # LDR Activated
             self._logger.info("LDR Activated")
 
     def take_snapshot(self):
-        # Check if the timer has elapsed configured seconds
-        snapshot_delay = self._settings.get_int(["snapshot_delay"])
-        if self.snapshot_timer is not None and time.time() - self.snapshot_timer >= snapshot_delay:
-            self._printer.commands(["@OCTOLAPSE TAKE-SNAPSHOT"])
-            self.snapshot_timer = None
-            self._logger.info("Snapshot taken!")
+        # Create a timestamp for the filename (including date and time)
+        photo_timestamp = datetime.now().strftime("%d-%m-%Y_%H:%M:%S")
+        photo_path = self.get_plugin_data_folder()
+        photo_file = os.path.join(photo_path, f"{photo_timestamp}.jpg")
+
+        try:
+            response = requests.get("http://localhost:8080/?action=snapshot", timeout=20)
+            if response.status_code == 200:
+                with open(photo_file, "wb") as f:
+                    f.write(response.content)
+                self._logger.info(f"Photo saved at {photo_file}")
+
+        except Exception as e:
+            self._logger.info(f"Error capturing photo: {e}")
 
     def get_settings_defaults(self):
         return dict(gpio_pin=21, snapshot_delay=5)  # Default GPIO pin and snapshot delay (you can change these)
