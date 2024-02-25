@@ -1,0 +1,50 @@
+ <style>
+        table {
+            border-collapse: collapse;
+            width: 100%;
+        }
+        th, td {
+            border: none;
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+    <h1>SLA Timelapse Settings</h1>
+    <body>
+    <p> Here you can control all aspects of SLA Timelapse.</p>
+    <p></p> 
+    <p></p> 
+    
+    <form action="#" method="post">
+        <!-- Select Basic -->
+        <div class="form-group">
+          <label class="col-md-4 control-label" for="selectbasic">Timelapse</label>
+          <div class="col-md-2">
+            <select id="selectbasic" name="selectbasic" class="form-control">
+              <option value="1">On</option>
+              <option value="2">Off</option>
+            </select>
+          </div>
+        </div>
+        <table>
+            <tr>
+                <th>
+                  <div class="control-group">
+                    <label class="control-label" for="gpio_pin" style="display: inline-block; width: 150px;">GPIO Pin Number:</label>
+                    <!-- Adjust the width of the label as needed -->
+                    <input type="number" id="gpio_pin" min="0" max="40" step="1" data-bind="value: settings.plugins.slatimelapse.gpio_pin" value="5" size="5" style="display: inline-block; width: 50px;">
+                    <!-- Set the input field to display inline-block -->
+                </div>
+
+                </th>
+                <th><p class="help-block">Enter the BCM GPIO pin number (0-40) for your setup.</p></th>
+            </tr>
+            <tr>
+                <td>Data 1</td>
+                <td>Data 2</td>
+            </tr>
+        </table>
+        <button type="submit">Save</button>
+    </form>
+    </body>
+
