@@ -6,7 +6,7 @@ import requests
 import os
 import time
 
-class SnapshotTriggerPlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.SettingsPlugin):
+class SnapshotTriggerPlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.SettingsPlugin, octoprint.plugin.TemplatePlugin):
     def on_after_startup(self):
         # Initialize GPIO and register the callback
         self._setup_gpio()
