@@ -1,4 +1,4 @@
-from octoprint.plugin import StartupPlugin, TemplatePlugin, SettingsPlugin
+
 import RPi.GPIO as GPIO
 import threading
 import datetime
@@ -7,11 +7,13 @@ import os
 import time
 import requests
 
+from octoprint.plugin import StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlugin
+
 PHOTO_DELAY = 5  # seconds
 
 log = logging.getLogger("octoprint.plugins.sla_timelapse")
 
-class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin):
+class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlugin):
     def __init__(self):
         self.trigger_count = 0
         self.ignore_triggers = 0
@@ -22,7 +24,8 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin):
             gpio_pin=21,
             photo_delay=PHOTO_DELAY,
             ignore_triggers=3,  # Default value for ignore triggers
-            snapshot_folder="/home/pi/timelapse"
+            snapshot_folder="/home/pi/timelapse",
+            enabled=True
         )
 
     def on_after_startup(self):
@@ -68,9 +71,15 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin):
 
     def get_template_configs(self):
         return [
-            dict(type="settings", custom_bindings=False, template="slatimelapse_settings.jinja2")
+            dict(type="settings", custom_bindings=False, template="slatimelapse_settings.jinja2"),
+            dict(type="navbar", custom_bindings=True, template="slatimelapse_navbar.jinja2")
         ]
-    
+        
+    def get_assets(self):
+        return dict(
+            js=["js/slatimelapse.js"]
+        )
+
     def on_settings_save(self, data):
 	    old_gpio = self._settings.get_int(["gpio_pin"])  # Move this line here
 	    super().on_settings_save(data)
