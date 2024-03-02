@@ -74,16 +74,16 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin):
         ]
     
     def on_settings_save(self, data):
-	    old_gpio = self._settings.get_int(["gpio_pin"])  # Move this line here
-	    super().on_settings_save(data)
-	    new_gpio = self._settings.get_int(["gpio_pin"])  # Get the new GPIO pin after settings save
-	
-	    if old_gpio != new_gpio:
-	        GPIO.remove_event_detect(old_gpio)  # Remove event detection for old pin
-	        self._setup_gpio()  # Set up GPIO for the new pin
-	
-	    self.ignore_triggers = self._settings.get_int(["ignore_triggers"])  # Update ignore triggers
-	    self.trigger_count = 0  # Reset trigger count when settings are changed
+        old_gpio = self._settings.get_int(["gpio_pin"])  # Move this line here
+        super().on_settings_save(data)
+        new_gpio = self._settings.get_int(["gpio_pin"])  # Get the new GPIO pin after settings save
+
+        if old_gpio != new_gpio:
+            GPIO.remove_event_detect(old_gpio)  # Remove event detection for old pin
+            self._setup_gpio()  # Set up GPIO for the new pin
+
+        self.ignore_triggers = self._settings.get_int(["ignore_triggers"])  # Update ignore triggers
+        self.trigger_count = 0  # Reset trigger count when settings are changed
 
 
 __plugin_name__ = "Sla Timelapse"
