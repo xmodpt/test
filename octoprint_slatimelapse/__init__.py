@@ -13,12 +13,15 @@ log = logging.getLogger("octoprint.plugins.sla_timelapse")
 
 class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin):
     def __init__(self):
+        self.trigger_count = 0 ######### Added Ignore Triggers
+        self.ignore_triggers = 0 ######### Added Ignore Triggers
         self.photo_in_progress = False
 
     def get_settings_defaults(self):
         return dict(
             gpio_pin=21,
             photo_delay=PHOTO_DELAY,
+            ignore_triggers=3,  # Default value for ignore triggers
             snapshot_folder="/home/pi/timelapse"
         )
 
@@ -33,13 +36,18 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin):
         GPIO.add_event_detect(gpio_pin, GPIO.BOTH, callback=self._ldr_changed, bouncetime=300)
 
     def _ldr_changed(self, channel):
-        if GPIO.input(channel) and not self.photo_in_progress:
-            log.info("LDR deactivated - Waiting to take photo")
-            self.photo_in_progress = True
-            threading.Timer(self._settings.get_float(["photo_delay"]), self._take_snapshot).start()
-        elif not GPIO.input(channel) and self.photo_in_progress:
-            log.info("LDR activated - Canceling snapshot")
-            self.photo_in_progress = False
+	    if self.ignore_triggers > 0:
+	        log.info(f"Ignoring trigger. Remaining ignore triggers: {self.ignore_triggers}")
+	        self.ignore_triggers -= 1
+	        return
+	
+	    if GPIO.input(channel) and not self.photo_in_progress:
+	        log.info("LDR deactivated - Waiting to take photo")
+	        self.photo_in_progress = True
+	        threading.Timer(self._settings.get_float(["photo_delay"]), self._take_snapshot).start()
+	    elif not GPIO.input(channel) and self.photo_in_progress:
+	        log.info("LDR activated - Canceling snapshot")
+	        self.photo_in_progress = False
 
     def _take_snapshot(self):
         try:
@@ -61,7 +69,15 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin):
         return [
             dict(type="settings", custom_bindings=False, template="slatimelapse_settings.jinja2")
         ]
-        
+    
+    def on_settings_changed(self, data):
+        old_gpio = self._settings.get_int(["gpio_pin"])
+        super().on_settings_save(data)
+        if old_gpio != self._settings.get_int(["gpio_pin"]):
+            self._setup_gpio()
+        self.ignore_triggers = self._settings.get_int(["ignore_triggers"])  # Update ignore triggers
+            
+                    
 __plugin_name__ = "Sla Timelapse"
 __plugin_pythoncompat__ = ">=3.7,<4"
 
