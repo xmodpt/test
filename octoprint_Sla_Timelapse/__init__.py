@@ -45,12 +45,11 @@ class SnapshotTriggerPlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.Set
     def get_settings_defaults(self):
         return dict(gpio_pin=21, snapshot_delay=5)  # Default GPIO pin and snapshot delay (you can change these)
 
-    def on_settings_changed(self, data):
+    def on_settings_save(self, data):
         old_gpio = self._settings.get_int(["gpio_pin"])
         octoprint.plugin.SettingsPlugin.on_settings_save(self, data)
         if old_gpio != self._settings.get_int(["gpio_pin"]):
             self._setup_gpio()
-
 
     def get_template_configs(self):
         return [
