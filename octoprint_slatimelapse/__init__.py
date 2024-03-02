@@ -66,6 +66,12 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin):
         template_vars["gpio_pin"] = self._settings.get_int(["gpio_pin"])
 
         return template_vars
+        
+    ########### whe added plugin stops working #####
+    #def get_template_configs(self):
+    #    return [
+    #        dict(type="settings", custom_bindings=False, template="sla_timelapse_settings.jinja2")
+    #    ]
 
 __plugin_name__ = "Sla Timelapse"
 __plugin_pythoncompat__ = ">=3.7,<4"
