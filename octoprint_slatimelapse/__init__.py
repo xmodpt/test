@@ -7,7 +7,6 @@ import os
 import time
 import requests
 
-#gpio_pin = 21 
 PHOTO_DELAY = 5  # seconds
 
 log = logging.getLogger("octoprint.plugins.sla_timelapse")
@@ -58,21 +57,11 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin):
         finally:
             self.photo_in_progress = False
 
-    def get_template_vars(self):
-        # Get the default template variables
-        template_vars = super(SlaTimelapsePlugin, self).get_template_vars()
-
-        # Add the GPIO pin setting to the template variables
-        template_vars["gpio_pin"] = self._settings.get_int(["gpio_pin"])
-
-        return template_vars
+    def get_template_configs(self):
+        return [
+            dict(type="settings", custom_bindings=False, template="slatimelapse_settings.jinja2")
+        ]
         
-    ########### whe added plugin stops working #####
-    #def get_template_configs(self):
-    #    return [
-    #        dict(type="settings", custom_bindings=False, template="sla_timelapse_settings.jinja2")
-    #    ]
-    #############################
 __plugin_name__ = "Sla Timelapse"
 __plugin_pythoncompat__ = ">=3.7,<4"
 
