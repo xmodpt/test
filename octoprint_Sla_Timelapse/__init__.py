@@ -1,12 +1,12 @@
 # snapshot_trigger/__init__.py
-
+from datetime import datetime
 import octoprint.plugin
 import RPi.GPIO as GPIO
 import requests
 import os
-import time
+import threading
 
-class SnapshotTriggerPlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.SettingsPlugin, octoprint.plugin.TemplatePlugin octoprint.plugin.AssetPlugin):
+class SnapshotTriggerPlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.SettingsPlugin, octoprint.plugin.TemplatePlugin, octoprint.plugin.AssetPlugin):
     def on_after_startup(self):
         # Initialize GPIO and register the callback
         self._setup_gpio()
@@ -50,8 +50,8 @@ class SnapshotTriggerPlugin(octoprint.plugin.StartupPlugin, octoprint.plugin.Set
             dict(type="settings", custom_bindings=False, template="sla_timelapse_settings.jinja2")
         ]
 
-    	def get_assets(self):
-		    return {"js": ["js/Sla_Timelapse.js.js"]}
+    def get_assets(self):
+        return {"js": ["js/Sla_Timelapse.js.js"]}
 
 __plugin_name__ = "Sla_timelapse Plugin"
 __plugin_pythoncompat__ = ">=3.7,<4"
