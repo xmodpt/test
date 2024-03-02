@@ -17,6 +17,7 @@ $(function() {
         };
 
         self.onToggleTimelapseEnable = function() {
+            console.log(self.settings.settings.plugins.slatimelapse.enabled());
             self.settings.settings.plugins.slatimelapse.enabled(!self.settings.settings.plugins.slatimelapse.enabled());
             self.settings.saveData();
         };
