@@ -7,6 +7,7 @@ import os
 import time
 import requests
 
+#gpio_pin = 21 
 PHOTO_DELAY = 5  # seconds
 
 log = logging.getLogger("octoprint.plugins.sla_timelapse")
