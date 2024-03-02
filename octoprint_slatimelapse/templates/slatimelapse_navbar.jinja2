@@ -1,1 +1,1 @@
-<a href="#" data-bind="attr: {href: settings.settings.plugins.helloworld.url}">Hello World!</a>
+<a href="#" data-bind="click: onToggleTimelapseEnable, css: {'fa-toggle-off' : !settings.settings.plugins.slatimelapse.enabled(), 'fa-toggle-on' : settingsViewModel.settings.plugins.slatimelapse.enabled()}" class="fa fa-lg fa-toggle-off"></a>

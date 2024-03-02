@@ -22,7 +22,8 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin):
             gpio_pin=21,
             photo_delay=PHOTO_DELAY,
             ignore_triggers=3,  # Default value for ignore triggers
-            snapshot_folder="/home/pi/timelapse"
+            snapshot_folder="/home/pi/timelapse",
+            enabled=True
         )
 
     def on_after_startup(self):
@@ -36,18 +37,18 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin):
         GPIO.add_event_detect(gpio_pin, GPIO.BOTH, callback=self._ldr_changed, bouncetime=300)
 
     def _ldr_changed(self, channel):
-	    if self.ignore_triggers > 0:
-	        log.info(f"Ignoring trigger. Remaining ignore triggers: {self.ignore_triggers}")
-	        self.ignore_triggers -= 1
-	        return
-	
-	    if GPIO.input(channel) and not self.photo_in_progress:
-	        log.info("LDR deactivated - Waiting to take photo")
-	        self.photo_in_progress = True
-	        threading.Timer(self._settings.get_float(["photo_delay"]), self._take_snapshot).start()
-	    elif not GPIO.input(channel) and self.photo_in_progress:
-	        log.info("LDR activated - Canceling snapshot")
-	        self.photo_in_progress = False
+        if self.ignore_triggers > 0:
+            log.info(f"Ignoring trigger. Remaining ignore triggers: {self.ignore_triggers}")
+            self.ignore_triggers -= 1
+            return
+
+        if GPIO.input(channel) and not self.photo_in_progress:
+            log.info("LDR deactivated - Waiting to take photo")
+            self.photo_in_progress = True
+            threading.Timer(self._settings.get_float(["photo_delay"]), self._take_snapshot).start()
+        elif not GPIO.input(channel) and self.photo_in_progress:
+            log.info("LDR activated - Canceling snapshot")
+            self.photo_in_progress = False
 
     def _take_snapshot(self):
         try:
@@ -67,7 +68,8 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin):
 
     def get_template_configs(self):
         return [
-            dict(type="settings", custom_bindings=False, template="slatimelapse_settings.jinja2")
+            dict(type="settings", custom_bindings=False, template="slatimelapse_settings.jinja2"),
+            dict(type="navbar", custom_bindings=True, template="slatimelapse_navbar.jinja2")
         ]
     
     def on_settings_save(self, data):
