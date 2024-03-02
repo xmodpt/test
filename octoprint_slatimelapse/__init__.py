@@ -13,8 +13,8 @@ log = logging.getLogger("octoprint.plugins.sla_timelapse")
 
 class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin):
     def __init__(self):
-        self.trigger_count = 0 ######### Added Ignore Triggers
-        self.ignore_triggers = 0 ######### Added Ignore Triggers
+        self.trigger_count = 0
+        self.ignore_triggers = 0
         self.photo_in_progress = False
 
     def get_settings_defaults(self):
@@ -70,7 +70,7 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin):
             dict(type="settings", custom_bindings=False, template="slatimelapse_settings.jinja2")
         ]
     
-    def on_settings_changed(self, data):
+    def on_settings_save(self, data):
         old_gpio = self._settings.get_int(["gpio_pin"])
         super().on_settings_save(data)
         if old_gpio != self._settings.get_int(["gpio_pin"]):
