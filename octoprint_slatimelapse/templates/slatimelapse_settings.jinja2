@@ -2,7 +2,7 @@
     <label class="control-label">Plugin Status:</label>
     <div class="controls">
         <label class="checkbox">
-            <input type="checkbox" id="plugin_enabled" data-bind="checked: settings.plugins.slatimelapse.enabled">
+            <input type="checkbox" id="plugin_enabled" data-bind="checked: settings.settings.plugins.slatimelapse.enabled">
             Enabled
         </label>
     </div>
@@ -11,21 +11,21 @@
 <div class="control-group">
     <label class="control-label" for="gpio_pin">GPIO Pin Number:</label>
     <div class="controls">
-        <input type="number" class="form-control input-sm" style="width: 50px;" id="gpio_pin" min="0" max="40" step="1" data-bind="value: settings.plugins.slatimelapse.gpio_pin">
+        <input type="number" class="form-control input-sm" style="width: 50px;" id="gpio_pin" min="0" max="40" step="1" data-bind="value: settings.settings.plugins.slatimelapse.gpio_pin">
         <p class="help-block">Enter the BCM GPIO pin number (0-40) for your setup.</p>
     </div>
 </div>
 <div class="control-group"> <!-- Added -->
     <label class="control-label" for="photo_delay">Photo Delay (seconds):</label>
     <div class="controls">
-        <input type="number" class="form-control input-sm" style="width: 50px;" id="photo_delay" min="1" step="1" data-bind="value: settings.plugins.slatimelapse.photo_delay">
+        <input type="number" class="form-control input-sm" style="width: 50px;" id="photo_delay" min="1" step="1" data-bind="value: settings.settings.plugins.slatimelapse.photo_delay">
         <p class="help-block">Enter the delay between photos (in seconds).</p>
     </div>
 </div>
 <div class="control-group">
     <label class="control-label" for="ignore_triggers">Ignore Triggers:</label>
     <div class="controls">
-        <input type="number" class="form-control input-sm" style="width: 50px;" id="ignore_triggers" min="0" step="1" data-bind="value: settings.plugins.slatimelapse.ignore_triggers">
+        <input type="number" class="form-control input-sm" style="width: 50px;" id="ignore_triggers" min="0" step="1" data-bind="value: settings.settings.plugins.slatimelapse.ignore_triggers">
         <p class="help-block">Enter the number of triggers to ignore before taking a photo.</p>
     </div>
 </div>

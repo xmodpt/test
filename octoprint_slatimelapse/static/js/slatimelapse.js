@@ -24,6 +24,6 @@ $(function() {
         ["loginStateViewModel", "settingsViewModel"],
 
         // Finally, this is the list of all elements we want this view model to be bound to.
-        ["#navbar_plugin_slatimelapse"]
+        ["#navbar_plugin_slatimelapse", "#settings_plugin_slatimelapse"]
     ]);
 });
