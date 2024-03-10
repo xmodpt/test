@@ -1,7 +1,6 @@
 ##############################################
 #
-# this code works with the ignore tiggers
-# and the settigns all work
+# the settigns all work
 #
 # added timout and reset
 # added job folders
