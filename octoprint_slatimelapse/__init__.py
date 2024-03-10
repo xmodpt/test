@@ -203,6 +203,11 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
             dict(type="navbar", custom_bindings=True, template="slatimelapse_navbar.jinja2")
         ]
 
+    def get_assets(self):
+        return dict(
+            js=["js/slatimelapse.js"]
+        )
+
     def on_settings_save(self, data):
         old_gpio = self._settings.get_int(["gpio_pin"])
         old_photo_delay = self._settings.get_int(["photo_delay"])
