@@ -1,6 +1,8 @@
-<a href="#" data-bind="click: onToggleTimelapseEnable, 
-css: {
-	'fa-toggle-off' : !settings.settings.plugins.slatimelapse.enabled(), 
-	'fa-toggle-on' : settingsViewModel.settings.plugins.slatimelapse.enabled()
-	}" class="fa fa-lg fa-toggle-off">
- </a>
+<a href="javascript:void(0)" data-bind="click: onToggleTimelapseEnable, 
+css: 
+{
+	'fa fa-2xl fa-regular fa-camera' : !settings.settings.plugins.slatimelapse.enabled(), 
+	'fa fa-2xl fa-solid fa-camera' : settingsViewModel.settings.plugins.slatimelapse.enabled()
+	
+}" class="fa fa-2xl fa-camera" style="margin-top: 10px;">
+</a>
