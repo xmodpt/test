@@ -1,5 +1,5 @@
 ##############################################
-#
+#                            V6
 # the settigns all work
 #
 # added timout and reset
@@ -13,13 +13,16 @@
 #
 #also added to settings
 # * Photo delay input
-# * Timeout input
+# * Img for the printer delay
+# * button "Make an LDR cable" with png of cable
+# * "i" buttons for more info
 #
 #also added to navbar
-# * SlaTimelapse On/OFF button ---  NOT WORKING
+# * SlaTimelapse On/OFF button 
 # 
 ##############################################
-from octoprint.plugin import StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlugin
+from octoprint.plugin import StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlugin, SimpleApiPlugin
+from octoprint.server import user_permission
 import RPi.GPIO as GPIO
 import threading
 import logging
@@ -28,19 +31,23 @@ import time
 import requests
 import subprocess
 import shutil
+import flask
+import json
 
 PHOTO_DELAY = 5  # seconds
 INACTIVE_TIMEOUT = 240  # seconds
 
 log = logging.getLogger("octoprint.plugins.sla_timelapse")
 
-class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlugin):
+class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlugin, SimpleApiPlugin):
     def __init__(self):
         super().__init__()
         self.photo_in_progress = False
         self.last_active_time = None
         self.job_folder = None  # Initialize job folder attribute
         self.stop_thread = threading.Event()  # Event to signal thread termination
+        self._avi_files = []  # Initialize the list of AVI files
+        self._avi_folder = None  # Path to the folder where AVI files are stored
 
     def get_settings_defaults(self):
         return dict(
@@ -48,7 +55,8 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
             photo_delay=PHOTO_DELAY,
             snapshot_folder=os.path.expanduser("~/timelapse"),  # Dynamic folder path
             enabled=True,
-            timeout=INACTIVE_TIMEOUT
+            timeout=INACTIVE_TIMEOUT,
+            avi_folder=os.path.expanduser("~/timelapse")  # Default path for AVI files
         )
 
     def on_after_startup(self):
@@ -57,11 +65,13 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
         photo_delay = self._settings.get_float(["photo_delay"])
         snapshot_folder = self._settings.get(["snapshot_folder"])
         timeout = self._settings.get(["timeout"])
+        self._avi_folder = self._settings.get(["avi_folder"])  # Retrieve AVI folder path
     
         log.info(f"SlaTimelapse Config - GPIO Pin retrieved from settings: {gpio_pin}")
         log.info(f"SlaTimelapse Config - Photo Delay retrieved from settings: {photo_delay}")
         log.info(f"SlaTimelapse Config - Store Folder retrieved from settings: {snapshot_folder}")
         log.info(f"SlaTimelapse Config - Timeout value from settings: {timeout}")
+        log.info(f"SlaTimelapse Config - AVI Folder retrieved from settings: {self._avi_folder}")
 
     def _setup_gpio(self):
         gpio_pin = self._settings.get_int(["gpio_pin"])
@@ -110,7 +120,6 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
 
         default_folder = self._settings.get(["snapshot_folder"])
 
-        
         # Check if the default folder exists, create it if it doesn't
         if not os.path.exists(default_folder):
             os.makedirs(default_folder)
@@ -182,15 +191,15 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
                 log.info("Timelapse video created successfully.")
 
                 # Copy the video file to the main timelapse folder
-                main_timelapse_folder = snapshot_folder
+                main_timelapse_folder = self._settings.get(["snapshot_folder"])
                 if not os.path.exists(main_timelapse_folder):
                     os.makedirs(main_timelapse_folder)
                 
                 final_output_file = os.path.join(main_timelapse_folder, f"{job_name}_Job{job_number}.avi")
                 shutil.copy(output_file, final_output_file)
 
-                # Delete the current job folder
-                # shutil.rmtree(self.job_folder)
+                # Update the list of AVI files
+                self._avi_files.append(final_output_file)
 
             else:
                 log.warning("Job folder is not set. Cannot create timelapse video.")
@@ -199,9 +208,21 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
 
     def get_template_configs(self):
         return [
-            dict(type="settings", custom_bindings=False, template="slatimelapse_settings.jinja2"),
+            dict(type="settings", custom_bindings=True, template="slatimelapse_settings.jinja2"),
             dict(type="navbar", custom_bindings=True, template="slatimelapse_navbar.jinja2")
         ]
+
+    def get_assets(self):
+        return dict(
+            js=["js/slatimelapse.js"]
+        )
+
+    def get_api_commands(self):
+        return dict(listAviFiles=[])
+
+    def on_api_command(self, command, data):
+        if command == 'listAviFiles':
+            return flask.jsonify(avi_files=self._avi_files)
 
     def on_settings_save(self, data):
         old_gpio = self._settings.get_int(["gpio_pin"])
