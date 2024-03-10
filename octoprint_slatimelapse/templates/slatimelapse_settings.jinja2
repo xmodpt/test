@@ -1,14 +1,4 @@
 <div class="control-group">
-    <label class="control-label">Plugin Status:</label>
-    <div class="controls">
-        <label class="checkbox">
-            <input type="checkbox" id="plugin_enabled" data-bind="checked: settings.plugins.slatimelapse.enabled">
-            Enabled
-        </label>
-    </div>
-</div>
-
-<div class="control-group">
     <label class="control-label" for="gpio_pin">GPIO Pin Number:</label>
     <div class="controls">
         <input type="number" class="form-control input-sm" style="width: 50px;" id="gpio_pin" min="0" max="40" step="1" data-bind="value: settings.plugins.slatimelapse.gpio_pin">
@@ -22,15 +12,19 @@
         <p class="help-block">Enter the delay between photos (in seconds).</p>
     </div>
 </div>
-<div class="control-group">
-    <label class="control-label" for="ignore_triggers">Ignore Triggers:</label>
+<div>
+<hr>
+<div>
+<div class="control-group"> <!-- Added -->
+    <label class="control-label" for="timeout">Timeout (seconds):</label>
     <div class="controls">
-        <input type="number" class="form-control input-sm" style="width: 50px;" id="ignore_triggers" min="0" step="1" data-bind="value: settings.plugins.slatimelapse.ignore_triggers">
-        <p class="help-block">Enter the number of triggers to ignore before taking a photo.</p>
+        <input type="number" class="form-control input-sm" style="width: 50px;" id="timeput" min="1" step="1" data-bind="value: settings.plugins.slatimelapse.timeout">
+        <p class="help-block">Enter the timeout value (in seconds) after last layer to generate Video File.</p>
     </div>
 </div>
-<div>
+    <img src="{{ url_for('static', filename='slatimelapse.png') }}" alt="Your Image">
 
+</div>
 <hr>
 <h3>NOTE: After saving, please restart OctoPrint for changes to take effect!</h3>
 </div>
