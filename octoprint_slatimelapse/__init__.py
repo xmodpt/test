@@ -8,6 +8,7 @@
 # added timelapse FFmpeg file creation and output
 # added copy timelpase video to main folder
 # added octopring.log configs output
+# added check to use any "~" folder other then "pi"
 #
 #
 #also added to settings
@@ -45,7 +46,7 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
         return dict(
             gpio_pin=21,
             photo_delay=PHOTO_DELAY,
-            snapshot_folder="/home/pi/timelapse",
+            snapshot_folder=os.path.expanduser("~/timelapse"),  # Dynamic folder path
             enabled=True,
             timeout=INACTIVE_TIMEOUT
         )
@@ -86,7 +87,7 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
             # Start a new timeout thread
             threading.Thread(target=self._timeout_check).start()
         elif not GPIO.input(channel) and self.photo_in_progress:
-            log.info("LDR activated - Canceling snapshot")
+            log.info("LDR activated")
             self.photo_in_progress = False
 
     def _timeout_check(self):
@@ -107,7 +108,8 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
         timestamp = time.strftime("%d-%m-%Y")
         job_number = 1
 
-        default_folder = "/home/pi/timelapse"
+        default_folder = self._settings.get(["snapshot_folder"])
+
         
         # Check if the default folder exists, create it if it doesn't
         if not os.path.exists(default_folder):
@@ -180,7 +182,7 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
                 log.info("Timelapse video created successfully.")
 
                 # Copy the video file to the main timelapse folder
-                main_timelapse_folder = "/home/pi/timelapse"
+                main_timelapse_folder = snapshot_folder
                 if not os.path.exists(main_timelapse_folder):
                     os.makedirs(main_timelapse_folder)
                 
