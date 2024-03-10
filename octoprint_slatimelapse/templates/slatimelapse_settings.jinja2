@@ -1,12 +1,22 @@
+<div class="control-group">
+    <label class="control-label">Plugin Status:</label>
+    <div class="controls">
+        <label class="checkbox">
+            <input type="checkbox" id="plugin_enabled" data-bind="checked: settings.settings.plugins.slatimelapse.enabled">
+            Enabled
+        </label>
+    </div>
+</div>
 <table>
 <tbody>
 <tr>
 <td>
 <h3> Sla Timalapse configurations</h3>
+
 <div class="control-group">
     <label class="control-label" for="gpio_pin">GPIO Pin Number:</label>
     <div class="controls">
-        <input type="number" class="form-control input-sm" style="width: 50px;" id="gpio_pin" min="0" max="40" step="1" data-bind="value: settings.plugins.slatimelapse.gpio_pin">
+        <input type="number" class="form-control input-sm" style="width: 50px;" id="gpio_pin" min="0" max="40" step="1" data-bind="value: settings.settings.plugins.slatimelapse.gpio_pin">
         <span class="info-icon">
 		    <a href="https://pinout.xyz/" target="_blank" class="same-color">
 		        <img src="/plugin/slatimelapse/static/img/info.png" alt="Information">
@@ -18,7 +28,7 @@
 <div class="control-group">
     <label class="control-label" for="photo_delay">Photo Delay (seconds):</label>
     <div class="controls">
-        <input type="number" class="form-control input-sm" style="width: 50px;" id="photo_delay" min="1" step="1" data-bind="value: settings.plugins.slatimelapse.photo_delay">
+        <input type="number" class="form-control input-sm" style="width: 50px;" id="photo_delay" min="1" step="1" data-bind="value: settings.settings.plugins.slatimelapse.photo_delay">
         <span class="info-icon">
             <a href="#" class="same-color" data-toggle="modal" data-target="#helpModal"> <!-- Added data-toggle and data-target attributes -->
                 <img src="/plugin/slatimelapse/static/img/info.png" alt="Information">
@@ -54,7 +64,7 @@
 <div class="control-group"> <!-- Added -->
     <label class="control-label" for="timeout">Timeout (seconds):</label>
     <div class="controls">
-        <input type="number" class="form-control input-sm" style="width: 50px;" id="timeput" min="1" step="1" data-bind="value: settings.plugins.slatimelapse.timeout">
+        <input type="number" class="form-control input-sm" style="width: 50px;" id="timeput" min="1" step="1" data-bind="value: settings.settings.plugins.slatimelapse.timeout">
         <span class="info-icon">
             <a href="#" class="same-color" data-toggle="modal" data-target="#helpModalTimeout"> <!-- Added data-toggle and data-target attributes -->
                 <img src="/plugin/slatimelapse/static/img/info.png" alt="Information">
