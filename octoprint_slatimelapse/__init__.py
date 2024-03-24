@@ -63,11 +63,25 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
         )
 
     #### Method called after the plugin has been initialized
+     #### Method called after the plugin has been initialized
     def on_after_startup(self):
         # Retrieve enabled state from settings and set up GPIO if enabled
         self.enabled = self._settings.get_boolean(["enabled"])
         if self.enabled:
             self._setup_gpio()
+
+        # Log plugin configuration settings
+        gpio_pin = self._settings.get_int(["gpio_pin"])
+        photo_delay = self._settings.get_int(["photo_delay"])
+        snapshot_folder = self._settings.get(["snapshot_folder"])
+        timeout = self._settings.get_int(["timeout"])
+        avi_folder = self._settings.get(["avi_folder"])
+
+        log.info(f"SlaTimelapse Config - GPIO Pin retrieved from settings: {gpio_pin}")
+        log.info(f"SlaTimelapse Config - Photo Delay retrieved from settings: {photo_delay}")
+        log.info(f"SlaTimelapse Config - Store Folder retrieved from settings: {snapshot_folder}")
+        log.info(f"SlaTimelapse Config - Timeout value from settings: {timeout}")
+        log.info(f"SlaTimelapse Config - AVI Folder retrieved from settings: {avi_folder}")
 
     #### Method called when settings are saved
     def on_settings_save(self, data):
