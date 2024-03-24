@@ -76,7 +76,7 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
         snapshot_folder = self._settings.get(["snapshot_folder"])
         timeout = self._settings.get_int(["timeout"])
         avi_folder = self._settings.get(["avi_folder"])
-
+    ########### BOOT LOG'S #######################
         log.info(f"SlaTimelapse Config - GPIO Pin retrieved from settings: {gpio_pin}")
         log.info(f"SlaTimelapse Config - Photo Delay retrieved from settings: {photo_delay}")
         log.info(f"SlaTimelapse Config - Store Folder retrieved from settings: {snapshot_folder}")
