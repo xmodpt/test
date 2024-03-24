@@ -1,5 +1,5 @@
 ##############################################
-#                            V6.1
+#                            V6.1.1
 # the settigns all work
 #
 # added timout and reset
@@ -9,7 +9,7 @@
 # added copy timelpase video to main folder
 # added octopring.log configs output
 # added check to use any "~" folder other then "pi"
-#
+# added comments
 #
 #also added to settings
 # * Img for the printer delay
@@ -31,14 +31,18 @@ import requests
 import subprocess
 import shutil
 
+#### Constants for photo delay and inactive timeout
 PHOTO_DELAY = 5  # seconds
 INACTIVE_TIMEOUT = 240  # seconds
 
+#### Set up logging
 log = logging.getLogger("octoprint.plugins.sla_timelapse")
 
+#### Plugin class definition
 class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlugin, SimpleApiPlugin):
     def __init__(self):
         super().__init__()
+        # Initialize plugin state variables
         self.photo_in_progress = False
         self.last_active_time = None
         self.job_folder = None  # Initialize job folder attribute
@@ -47,35 +51,40 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
         self._avi_folder = None  # Path to the folder where AVI files are stored
         self.enabled = False  # Track whether the plugin is enabled or disabled
 
+    #### Define default settings for the plugin
     def get_settings_defaults(self):
         return dict(
             gpio_pin=21,
             photo_delay=PHOTO_DELAY,
             snapshot_folder=os.path.expanduser("~/timelapse"),  # Dynamic folder path
-            enabled=False,
+            enabled=False,  # Plugin disabled by default
             timeout=INACTIVE_TIMEOUT,
             avi_folder=os.path.expanduser("~/timelapse")  # Default path for AVI files
         )
 
+    #### Method called after the plugin has been initialized
     def on_after_startup(self):
+        # Retrieve enabled state from settings and set up GPIO if enabled
         self.enabled = self._settings.get_boolean(["enabled"])
         if self.enabled:
             self._setup_gpio()
 
+    #### Method called when settings are saved
     def on_settings_save(self, data):
         old_enabled = self.enabled
+        # Call parent method to handle settings save
         SettingsPlugin.on_settings_save(self, data)
+        # Check if enabled state has changed
         new_enabled = self._settings.get_boolean(["enabled"])
         if old_enabled != new_enabled:
             self.enabled = new_enabled
+            # Set up or clean up GPIO based on new enabled state
             if self.enabled:
                 self._setup_gpio()
             else:
                 self._cleanup()
-#        if old_gpio != new_gpio:
-#            GPIO.remove_event_detect(old_gpio)  # Remove event detection for old pin
-#            self._setup_gpio()  # Set up GPIO for the new pin
 
+    #### Set up GPIO pins for photo capture
     def _setup_gpio(self):
         gpio_pin = self._settings.get_int(["gpio_pin"])
         log.info(f"GPIO Pin retrieved from settings: {gpio_pin}")
@@ -83,15 +92,18 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
         GPIO.setup(gpio_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.add_event_detect(gpio_pin, GPIO.BOTH, callback=self._ldr_changed, bouncetime=100)
 
+    #### Clean up GPIO pins and ongoing processes
     def _cleanup(self):
-        # Clean up GPIO and any ongoing processes
         GPIO.cleanup()
         self.stop_thread.set()
 
+    #### Callback method for LDR (Light Dependent Resistor) changes
     def _ldr_changed(self, channel):
+        #### If plugin is disabled, do nothing
         if not self.enabled:
             return
 
+        #### If LDR is activated and no photo is currently in progress, start capturing photo
         if GPIO.input(channel) and not self.photo_in_progress:
             log.info("LDR deactivated - Waiting to take photo")
             self.photo_in_progress = True
@@ -107,10 +119,13 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
 
             # Start a new timeout thread
             threading.Thread(target=self._timeout_check).start()
+        
+        # If LDR is deactivated and a photo is in progress, mark photo as completed
         elif not GPIO.input(channel) and self.photo_in_progress:
             log.info("LDR activated")
             self.photo_in_progress = False
 
+    #### Thread function to check for inactive timeout
     def _timeout_check(self):
         while not self.stop_thread.is_set():
             if time.time() - self.last_active_time > INACTIVE_TIMEOUT:
@@ -118,6 +133,7 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
                 break
             time.sleep(1)
 
+    #### Method to handle inactive timeout
     def _handle_timeout(self):
         log.info("Timeout reached. Finishing the job and creating timelapse video.")
         self.photo_in_progress = False
@@ -126,13 +142,13 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
         if self.enabled:
             self._setup_gpio()  # Re-setup GPIO for new job
 
+    #### Method to create a new job folder for storing snapshots
     def _create_job_folder(self):
         timestamp = time.strftime("%d-%m-%Y")
         job_number = 1
 
         default_folder = self._settings.get(["snapshot_folder"])
 
-        # Check if the default folder exists, create it if it doesn't
         if not os.path.exists(default_folder):
             os.makedirs(default_folder)
             log.info(f"Created default folder: {default_folder}")
@@ -146,6 +162,7 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
             else:
                 job_number += 1
 
+    #### Method to capture a snapshot from the webcam
     def _take_snapshot(self):
         try:
             response = requests.get("http://localhost:8080/webcam/?action=snapshot", timeout=10)
@@ -163,8 +180,8 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
         finally:
             self.photo_in_progress = False
 
+    #### Method to get the next available file number for a snapshot
     def _get_next_file_number(self, job_name):
-        # Scan existing files in the job folder and return the next available file number
         files = os.listdir(self.job_folder)
         existing_numbers = []
         for file in files:
@@ -179,30 +196,29 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
         else:
             return 1
 
+    #### Method to create a timelapse video from captured snapshots
     def _create_timelapse_video(self):
         try:
             if self.job_folder:
                 job_name = os.path.basename(self.job_folder)
                 input_pattern = os.path.join(self.job_folder, f"snapshot_{job_name}_%06d.jpg")
 
-                job_number = job_name.split("_")[-1].split("Job")[-1]  # Extract job number
+                job_number = job_name.split("_")[-1].split("Job")[-1]
 
                 output_file = os.path.join(self.job_folder, f"{job_name}.avi")
 
-                # Run FFmpeg command to create the timelapse video
                 cmd = [
                     "ffmpeg",
-                    "-r", "60",  # Frame rate
+                    "-r", "60",
                     "-i", input_pattern,
-                    "-c:v", "libx264",  # Video codec
-                    "-vf", "fps=60",  # Output frame rate
+                    "-c:v", "libx264",
+                    "-vf", "fps=60",
                     output_file
                 ]
 
                 subprocess.run(cmd, check=True)
                 log.info("Timelapse video created successfully.")
 
-                # Copy the video file to the main timelapse folder
                 main_timelapse_folder = self._settings.get(["snapshot_folder"])
                 if not os.path.exists(main_timelapse_folder):
                     os.makedirs(main_timelapse_folder)
@@ -210,7 +226,6 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
                 final_output_file = os.path.join(main_timelapse_folder, f"{job_name}_Job{job_number}.avi")
                 shutil.copy(output_file, final_output_file)
 
-                # Update the list of AVI files
                 self._avi_files.append(final_output_file)
 
             else:
@@ -218,6 +233,7 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
         except Exception as e:
             log.exception(f"Failed to create timelapse video: {e}")
 
+    ##### Method to provide configuration for templates
     def get_template_configs(self):
         return [
             dict(type="settings", custom_bindings=True, template="slatimelapse_settings.jinja2"),
@@ -225,15 +241,17 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
             dict(type="tab", custom_bindings=True, template="slatimelapse_tab.jinja2", data_bind="allowBind: true")
         ]
 
+    ##### Method to provide assets (JavaScript files)
     def get_assets(self):
         return dict(
             js=["js/slatimelapse.js"]
         )
 
-        
+#### Plugin metadata
 __plugin_name__ = "Sla Timelapse"
 __plugin_pythoncompat__ = ">=3.7,<4"
 
+#### Plugin load function
 def __plugin_load__():
     global __plugin_implementation__
     __plugin_implementation__ = SlaTimelapsePlugin()
