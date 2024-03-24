@@ -1,5 +1,5 @@
 ##############################################
-#                            V6
+#                            V6.1
 # the settigns all work
 #
 # added timout and reset
@@ -12,27 +12,24 @@
 #
 #
 #also added to settings
-# * Photo delay input
 # * Img for the printer delay
 # * button "Make an LDR cable" with png of cable
 # * "i" buttons for more info
 #
 #also added to navbar
-# * SlaTimelapse On/OFF button 
+# * SlaTimelapse On/OFF button <----------- WORKING
 # 
 ##############################################
+import os
+import flask
 from octoprint.plugin import StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlugin, SimpleApiPlugin
-from octoprint.server import user_permission
 import RPi.GPIO as GPIO
 import threading
 import logging
-import os
 import time
 import requests
 import subprocess
 import shutil
-import flask
-import json
 
 PHOTO_DELAY = 5  # seconds
 INACTIVE_TIMEOUT = 240  # seconds
@@ -48,30 +45,33 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
         self.stop_thread = threading.Event()  # Event to signal thread termination
         self._avi_files = []  # Initialize the list of AVI files
         self._avi_folder = None  # Path to the folder where AVI files are stored
+        self.enabled = False  # Track whether the plugin is enabled or disabled
 
     def get_settings_defaults(self):
         return dict(
             gpio_pin=21,
             photo_delay=PHOTO_DELAY,
             snapshot_folder=os.path.expanduser("~/timelapse"),  # Dynamic folder path
-            enabled=True,
+            enabled=False,
             timeout=INACTIVE_TIMEOUT,
             avi_folder=os.path.expanduser("~/timelapse")  # Default path for AVI files
         )
 
     def on_after_startup(self):
-        self._setup_gpio()
-        gpio_pin = self._settings.get_int(["gpio_pin"])
-        photo_delay = self._settings.get_float(["photo_delay"])
-        snapshot_folder = self._settings.get(["snapshot_folder"])
-        timeout = self._settings.get(["timeout"])
-        self._avi_folder = self._settings.get(["avi_folder"])  # Retrieve AVI folder path
-    
-        log.info(f"SlaTimelapse Config - GPIO Pin retrieved from settings: {gpio_pin}")
-        log.info(f"SlaTimelapse Config - Photo Delay retrieved from settings: {photo_delay}")
-        log.info(f"SlaTimelapse Config - Store Folder retrieved from settings: {snapshot_folder}")
-        log.info(f"SlaTimelapse Config - Timeout value from settings: {timeout}")
-        log.info(f"SlaTimelapse Config - AVI Folder retrieved from settings: {self._avi_folder}")
+        self.enabled = self._settings.get_boolean(["enabled"])
+        if self.enabled:
+            self._setup_gpio()
+
+    def on_settings_save(self, data):
+        old_enabled = self.enabled
+        SettingsPlugin.on_settings_save(self, data)
+        new_enabled = self._settings.get_boolean(["enabled"])
+        if old_enabled != new_enabled:
+            self.enabled = new_enabled
+            if self.enabled:
+                self._setup_gpio()
+            else:
+                self._cleanup()
 
     def _setup_gpio(self):
         gpio_pin = self._settings.get_int(["gpio_pin"])
@@ -80,7 +80,15 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
         GPIO.setup(gpio_pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
         GPIO.add_event_detect(gpio_pin, GPIO.BOTH, callback=self._ldr_changed, bouncetime=100)
 
+    def _cleanup(self):
+        # Clean up GPIO and any ongoing processes
+        GPIO.cleanup()
+        self.stop_thread.set()
+
     def _ldr_changed(self, channel):
+        if not self.enabled:
+            return
+
         if GPIO.input(channel) and not self.photo_in_progress:
             log.info("LDR deactivated - Waiting to take photo")
             self.photo_in_progress = True
@@ -112,7 +120,8 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
         self.photo_in_progress = False
         self._create_timelapse_video()
         self.job_folder = None
-        self._setup_gpio()  # Re-setup GPIO for new job
+        if self.enabled:
+            self._setup_gpio()  # Re-setup GPIO for new job
 
     def _create_job_folder(self):
         timestamp = time.strftime("%d-%m-%Y")
@@ -209,7 +218,8 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
     def get_template_configs(self):
         return [
             dict(type="settings", custom_bindings=True, template="slatimelapse_settings.jinja2"),
-            dict(type="navbar", custom_bindings=True, template="slatimelapse_navbar.jinja2")
+            dict(type="navbar", custom_bindings=True, template="slatimelapse_navbar.jinja2"),
+            dict(type="tab", custom_bindings=True, template="slatimelapse_tab.jinja2", data_bind="allowBind: true")
         ]
 
     def get_assets(self):
@@ -217,21 +227,7 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
             js=["js/slatimelapse.js"]
         )
 
-    def get_api_commands(self):
-        return dict(listAviFiles=[])
-
-    def on_api_command(self, command, data):
-        if command == 'listAviFiles':
-            return flask.jsonify(avi_files=self._avi_files)
-
-    def on_settings_save(self, data):
-        old_gpio = self._settings.get_int(["gpio_pin"])
-        old_photo_delay = self._settings.get_int(["photo_delay"])
-        old_timeout = self._settings.get_int(["timeout"])
-        SettingsPlugin.on_settings_save(self, data)
-        if old_gpio != self._settings.get_int(["gpio_pin"]):
-            self._setup_gpio()
-            
+        
 __plugin_name__ = "Sla Timelapse"
 __plugin_pythoncompat__ = ">=3.7,<4"
 
