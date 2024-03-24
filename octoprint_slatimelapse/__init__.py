@@ -72,6 +72,9 @@ class SlaTimelapsePlugin(StartupPlugin, TemplatePlugin, SettingsPlugin, AssetPlu
                 self._setup_gpio()
             else:
                 self._cleanup()
+        if old_gpio != new_gpio:
+            GPIO.remove_event_detect(old_gpio)  # Remove event detection for old pin
+            self._setup_gpio()  # Set up GPIO for the new pin
 
     def _setup_gpio(self):
         gpio_pin = self._settings.get_int(["gpio_pin"])
